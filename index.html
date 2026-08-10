@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ёлки-Иголки</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&display=swap" rel="stylesheet">
+    <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU&apikey=yU6dWYKQnuhKe6Z8KhQOZg==" type="text/javascript"></script>
+</head>
+<body>
+    <!-- Шапка сайта -->
+    <header class="header">
+        <div class="container header-content">
+            <h1 class="restaurant-name">Ёлки-Иголки</h1>
+            <button class="cart-button" onclick="toggleCart()">
+                <img src="/img/Корзинка.png" width="35px" height="35px" alt="">
+                <span class="cart-count" id="cartCount">0</span>
+                <span class="cart-total" id="cartTotal">0 ₽</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Основной контент -->
+    <main class="main-content">
+        <div class="container">
+            <div class="content-wrapper">
+                <!-- Боковая панель с поиском и категориями -->
+                <aside class="sidebar">
+                    <nav class="categories-nav">
+                        <!-- Поиск вместо заголовка "Категории" -->
+                        <div class="search-container">
+                            <div class="search-box">
+                                <input type="text" id="searchInput" placeholder="Поиск блюда..." class="search-input">
+                            </div>
+                            <div id="searchResults" class="search-results"></div>
+                        </div>
+                        
+                        <!-- Категории -->
+                        <ul class="categories-list">
+                            <li><a href="#soups" class="category-link active">Супы</a></li>
+                            <li><a href="#main-dishes" class="category-link">Основные блюда</a></li>
+                            <li><a href="#appetizers" class="category-link">Закуски</a></li>
+                            <li><a href="#desserts" class="category-link">Десерты</a></li>
+                            <li><a href="#drinks" class="category-link">Напитки</a></li>
+                        </ul>
+                    </nav>
+                </aside>
+
+                <!-- Карточки блюд -->
+                <section class="menu-section" id="menuContent">
+                    <!-- Контент будет генерироваться JavaScript -->
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <!-- Модальное окно корзины -->
+    <div class="modal" id="cartModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="cartModalTitle">Корзина</h2>
+                <button class="close-button" onclick="closeAllModals()">&times;</button>
+            </div>
+            <div class="modal-body" id="cartContent">
+                <!-- Контент корзины -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно оформления заказа -->
+    <div class="modal" id="checkoutModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Оформление заказа</h2>
+                <button class="close-button" onclick="closeAllModals()">&times;</button>
+            </div>
+            <div class="modal-body" id="checkoutContent">
+                <form id="orderForm">
+                    <div class="form-group">
+                        <label for="name">Имя *</label>
+                        <input type="text" id="name" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Номер телефона *</label>
+                        <input type="tel" id="phone" name="phone" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="comment">Комментарий к заказу</label>
+                        <textarea id="comment" name="comment" rows="3"></textarea>
+                    </div>
+                    
+                    <!-- Карта -->
+                    <div class="map-section">
+                        <h3>Выберите адрес доставки</h3>
+                        <div id="yandexMap" style="width: 100%; height: 300px;"></div>
+                    </div>
+                    
+                    <button type="submit" class="submit-order-btn">Завершить оформление</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно с деталями блюда -->
+    <div class="modal" id="dishModal">
+        <div class="modal-content dish-detail-modal">
+            <div class="modal-header">
+                <h2 id="dishModalTitle"></h2>
+                <button class="close-button" onclick="closeDishModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="dishDetailContent">
+                <!-- Контент будет заполняться динамически -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Подвал сайта -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-info">
+                    <h3>Ресторан "Жратва"</h3>
+                    <p>Аутентичная русская кухня в современном исполнении</p>
+                    <p>📍 г. Москва, ул. Русская, д. 1</p>
+                    <p>📞 +7 (999) 123-45-67</p>
+                    <p>✉️ info@jratva.ru</p>
+                </div>
+                <div class="footer-hours">
+                    <h3>Часы работы</h3>
+                    <p>Пн-Чт: 12:00 - 23:00</p>
+                    <p>Пт-Сб: 12:00 - 02:00</p>
+                    <p>Вс: 12:00 - 22:00</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

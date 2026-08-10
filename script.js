@@ -1,0 +1,797 @@
+// Глобальные переменные
+let cart = [];
+let currentDish = null;
+let yandexMap = null;
+let cartState = 'cart'; // 'cart' или 'confirmClear'
+
+// Конфигурация Telegram  
+const TELEGRAM_CONFIG = {
+    botToken: '8847713556:AAHYCcfK4nxIRZaH7G3Ag9DmMwLbnBYBCYw',
+    chatId: '1719696586'
+};
+
+// Данные меню - теперь без генерации SVG, используем placeholder
+const menuData = {
+    soups: {
+        title: 'Супы',
+        dishes: [
+            {
+                id: 'soup1',
+                name: 'Борщ',
+                price: 450,
+                description: 'Классический борщ с говядиной, свеклой и сметаной',
+                image: 'img/Борщ.jpg',
+                options: [
+                    { name: 'С чесночными гренками', price: 50 },
+                    { name: 'Двойная порция мяса', price: 120 },
+                    { name: 'Со сметаной', price: 30 }
+                ]
+            },
+            {
+                id: 'soup2',
+                name: 'Солянка',
+                price: 480,
+                description: 'Сборная мясная солянка с копченостями и оливками',
+                image: 'img/Солянка.jpg',
+                options: [
+                    { name: 'С лимоном', price: 20 },
+                    { name: 'С каперсами', price: 40 },
+                    { name: 'Дополнительные копчености', price: 100 }
+                ]
+            },
+            {
+                id: 'soup3',
+                name: 'Уха',
+                price: 520,
+                description: 'Наваристая уха из свежей речной рыбы',
+                image: 'img/Уха.jpg',
+                options: [
+                    { name: 'С расстегаем', price: 80 },
+                    { name: 'С красной икрой', price: 150 },
+                    { name: 'Двойная порция рыбы', price: 130 }
+                ]
+            }
+        ]
+    },
+    'main-dishes': {
+        title: 'Основные блюда',
+        dishes: [
+            {
+                id: 'main1',
+                name: 'Котлета по-киевски',
+                price: 680,
+                description: 'Нежное куриное филе с маслом в хрустящей панировке',
+                image: 'img/Котлета по киевски.jpg',
+                options: [
+                    { name: 'С картофельным пюре', price: 90 },
+                    { name: 'С овощным гарниром', price: 70 },
+                    { name: 'С грибным соусом', price: 60 }
+                ]
+            },
+            {
+                id: 'main2',
+                name: 'Бефстроганов',
+                price: 750,
+                description: 'Говядина в сливочном соусе с шампиньонами',
+                image: 'img/Бефстроганов.jpg',
+                options: [
+                    { name: 'С картофелем фри', price: 80 },
+                    { name: 'С рисом', price: 50 },
+                    { name: 'С гречневой кашей', price: 45 }
+                ]
+            },
+            {
+                id: 'main3',
+                name: 'Пельмени сибирские',
+                price: 550,
+                description: 'Домашние пельмени ручной лепки с тремя видами мяса',
+                image: 'img/Пельмени сибирские.jpg',
+                options: [
+                    { name: 'Со сметаной', price: 30 },
+                    { name: 'С уксусом', price: 20 },
+                    { name: 'С маслом', price: 25 }
+                ]
+            }
+        ]
+    },
+    appetizers: {
+        title: 'Закуски',
+        dishes: [
+            {
+                id: 'appetizer1',
+                name: 'Сельдь под шубой',
+                price: 380,
+                description: 'Классический слоеный салат с селедкой и овощами',
+                image: 'img/Сельдь под шубой.jpg',
+                options: [
+                    { name: 'С яйцом', price: 25 },
+                    { name: 'С красной икрой', price: 100 },
+                    { name: 'Порция больше', price: 150 }
+                ]
+            },
+            {
+                id: 'appetizer2',
+                name: 'Оливье',
+                price: 350,
+                description: 'Традиционный салат с колбасой и майонезом',
+                image: 'img/Оливье.jpg',
+                options: [
+                    { name: 'С курицей', price: 70 },
+                    { name: 'С раковыми шейками', price: 200 },
+                    { name: 'Без майонеза', price: 0 }
+                ]
+            }
+        ]
+    },
+    desserts: {
+        title: 'Десерты',
+        dishes: [
+            {
+                id: 'dessert1',
+                name: 'Медовик',
+                price: 320,
+                description: 'Нежный медовый торт со сметанным кремом',
+                image: 'img/Медовик.jpg',
+                options: [
+                    { name: 'С орехами', price: 40 },
+                    { name: 'С шоколадной крошкой', price: 50 },
+                    { name: 'С ягодами', price: 60 }
+                ]
+            },
+            {
+                id: 'dessert2',
+                name: 'Сырники',
+                price: 280,
+                description: 'Румяные сырники из творога со сметаной и вареньем',
+                image: 'img/Сырники.jpg',
+                options: [
+                    { name: 'Со сметаной', price: 30 },
+                    { name: 'С вишневым вареньем', price: 35 },
+                    { name: 'С медом', price: 40 }
+                ]
+            }
+        ]
+    },
+    drinks: {
+        title: 'Напитки',
+        dishes: [
+            {
+                id: 'drink1',
+                name: 'Морс клюквенный',
+                price: 180,
+                description: 'Освежающий напиток из лесной клюквы',
+                image: 'img/Морс клюквенный.jpg',
+                options: [
+                    { name: 'С мятой', price: 20 },
+                    { name: 'С медом', price: 30 },
+                    { name: 'Большой стакан', price: 70 }
+                ]
+            },
+            {
+                id: 'drink2',
+                name: 'Квас домашний',
+                price: 150,
+                description: 'Натуральный квас, приготовленный по старинному рецепту',
+                image: 'img/Квас домашний.jpg',
+                options: [
+                    { name: 'С хреном', price: 15 },
+                    { name: 'С изюмом', price: 20 },
+                    { name: 'Большой стакан', price: 60 }
+                ]
+            }
+        ]
+    }
+};
+
+// Инициализация при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
+    renderMenu();
+    setupCategoryLinks();
+    setupSearch();
+    initYandexMap();
+    setupFormSubmission();
+});
+
+// Отрисовка меню
+function renderMenu() {
+    const menuContent = document.getElementById('menuContent');
+    menuContent.innerHTML = '';
+    
+    Object.entries(menuData).forEach(([categoryId, category]) => {
+        const section = document.createElement('div');
+        section.id = categoryId;
+        section.className = 'menu-section';
+        
+        section.innerHTML = `
+            <h2 class="menu-section-title">${category.title}</h2>
+            <div class="menu-grid">
+                ${category.dishes.map(dish => `
+                    <div class="dish-card" onclick="openDishDetail('${dish.id}', '${categoryId}')">
+                        <img src="${dish.image}" alt="${dish.name}" class="dish-image" onerror="this.src='placeholder.jpg'">
+                        <div class="dish-info">
+                            <h3 class="dish-name">${dish.name}</h3>
+                            <p class="dish-description">${dish.description}</p>
+                            <div class="dish-price">${dish.price} ₽</div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        
+        menuContent.appendChild(section);
+    });
+}
+
+// Настройка ссылок категорий
+function setupCategoryLinks() {
+    const categoryLinks = document.querySelectorAll('.category-link');
+    
+    categoryLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            categoryLinks.forEach(l => l.classList.remove('active'));
+            this.classList.add('active');
+            
+            const targetId = this.getAttribute('href').substring(1);
+            const targetElement = document.getElementById(targetId);
+            
+            if (targetElement) {
+                targetElement.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+    
+    window.addEventListener('scroll', highlightCategory);
+}
+
+// Подсветка активной категории при скролле
+function highlightCategory() {
+    const sections = document.querySelectorAll('.menu-section');
+    const categoryLinks = document.querySelectorAll('.category-link');
+    
+    let currentSection = '';
+    
+    sections.forEach(section => {
+        const sectionTop = section.offsetTop;
+        
+        if (window.pageYOffset >= sectionTop - 150) {
+            currentSection = section.getAttribute('id');
+        }
+    });
+    
+    categoryLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === `#${currentSection}`) {
+            link.classList.add('active');
+        }
+    });
+}
+
+// Настройка поиска
+function setupSearch() {
+    const searchInput = document.getElementById('searchInput');
+    const resultsContainer = document.getElementById('searchResults');
+
+        
+        // Автопоиск при вводе (с задержкой)
+        let searchTimeout;
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                searchDishes();
+            }, 300);
+        });
+    }
+    
+    // Создаем кнопку очистки результатов
+    if (resultsContainer) {
+        const clearBtn = document.createElement('button');
+        clearBtn.className = 'clear-search-btn';
+        clearBtn.textContent = '✕ Очистить результаты';
+        clearBtn.onclick = function() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('searchResults').innerHTML = '';
+            this.classList.remove('visible');
+        };
+        resultsContainer.after(clearBtn);
+    }
+
+
+// Поиск блюд
+function searchDishes() {
+    const input = document.getElementById('searchInput');
+    const query = input.value.trim().toLowerCase();
+    const resultsContainer = document.getElementById('searchResults');
+    const clearBtn = document.querySelector('.clear-search-btn');
+    
+    if (!query) {
+        resultsContainer.innerHTML = '';
+        if (clearBtn) clearBtn.classList.remove('visible');
+        return;
+    }
+    
+    // Собираем все блюда из всех категорий
+    let allDishes = [];
+    Object.entries(menuData).forEach(([categoryId, category]) => {
+        category.dishes.forEach(dish => {
+            allDishes.push({
+                ...dish,
+                categoryId: categoryId,
+                categoryTitle: category.title
+            });
+        });
+    });
+    
+    // Фильтруем по названию (регистронезависимый поиск)
+    const results = allDishes.filter(dish => 
+        dish.name.toLowerCase().includes(query)
+    );
+    
+    if (results.length === 0) {
+        resultsContainer.innerHTML = `
+            <div class="no-results">
+                <p>😕 Ничего не найдено</p>
+                <p style="font-size: 12px; margin-top: 5px;">Попробуйте изменить запрос</p>
+            </div>
+        `;
+    } else {
+        resultsContainer.innerHTML = results.map(dish => `
+            <div class="search-result-item" onclick="openDishDetail('${dish.id}', '${dish.categoryId}')">
+                <div>
+                    <div class="search-result-name">${dish.name}</div>
+                    <div class="search-result-category">${dish.categoryTitle}</div>
+                </div>
+                <div class="search-result-price">${dish.price} ₽</div>
+            </div>
+        `).join('');
+    }
+    
+    if (clearBtn) clearBtn.classList.add('visible');
+}
+
+// Открытие деталей блюда
+function openDishDetail(dishId, categoryId) {
+    const category = menuData[categoryId];
+    const dish = category.dishes.find(d => d.id === dishId);
+    
+    if (!dish) return;
+    
+    currentDish = { ...dish, category: category.title, categoryId: categoryId };
+    
+    const modal = document.getElementById('dishModal');
+    const title = document.getElementById('dishModalTitle');
+    const content = document.getElementById('dishDetailContent');
+    
+    title.textContent = dish.name;
+    
+    content.innerHTML = `
+        <img src="${dish.image}" alt="${dish.name}" class="dish-detail-image" onerror="this.src='placeholder.jpg'">
+        <div class="dish-detail-info">
+            <p class="dish-description">${dish.description}</p>
+            <div class="dish-detail-price">${dish.price} ₽</div>
+            
+            <div class="options-group">
+                <h4>Дополнительные услуги</h4>
+                ${dish.options.map(option => `
+                    <div class="option-item">
+                        <label>
+                            <input type="checkbox" class="option-checkbox" data-name="${option.name}" data-price="${option.price}">
+                            ${option.name} (+${option.price} ₽)
+                        </label>
+                    </div>
+                `).join('')}
+            </div>
+            
+            <div class="service-type">
+                <h4>Тип обслуживания</h4>
+                <select id="serviceType">
+                    <option value="dine-in">В зале</option>
+                    <option value="takeaway">На вынос</option>
+                </select>
+            </div>
+            
+            <button class="add-to-cart-btn" onclick="addToCartFromDetail()">
+                Добавить в корзину - ${dish.price} ₽
+            </button>
+        </div>
+    `;
+    
+    modal.classList.add('active');
+    
+    const checkboxes = content.querySelectorAll('.option-checkbox');
+    const priceButton = content.querySelector('.add-to-cart-btn');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateTotalPrice);
+    });
+    
+    function updateTotalPrice() {
+        let totalPrice = dish.price;
+        checkboxes.forEach(cb => {
+            if (cb.checked) {
+                totalPrice += parseInt(cb.dataset.price);
+            }
+        });
+        priceButton.textContent = `Добавить в корзину - ${totalPrice} ₽`;
+    }
+}
+
+// Закрытие модального окна блюда
+function closeDishModal() {
+    document.getElementById('dishModal').classList.remove('active');
+    currentDish = null;
+}
+
+// Добавление в корзину из деталей
+function addToCartFromDetail() {
+    if (!currentDish) return;
+    
+    const checkboxes = document.querySelectorAll('.option-checkbox');
+    const serviceType = document.getElementById('serviceType').value;
+    
+    let options = [];
+    let totalPrice = currentDish.price;
+    
+    checkboxes.forEach(cb => {
+        if (cb.checked) {
+            options.push({
+                name: cb.dataset.name,
+                price: parseInt(cb.dataset.price)
+            });
+            totalPrice += parseInt(cb.dataset.price);
+        }
+    });
+    
+    // Проверяем, есть ли уже такое блюдо в корзине
+    const existingItemIndex = cart.findIndex(item => 
+        item.dishId === currentDish.id && 
+        item.serviceType === serviceType &&
+        JSON.stringify(item.options) === JSON.stringify(options)
+    );
+    
+    if (existingItemIndex !== -1) {
+        cart[existingItemIndex].quantity += 1;
+    } else {
+        const cartItem = {
+            id: Date.now(),
+            dishId: currentDish.id,
+            name: currentDish.name,
+            image: currentDish.image,
+            basePrice: currentDish.price,
+            totalPrice: totalPrice,
+            options: options,
+            serviceType: serviceType,
+            category: currentDish.category,
+            quantity: 1
+        };
+        
+        cart.push(cartItem);
+    }
+    
+    updateCartDisplay();
+    closeDishModal();
+    
+    animateCartIcon();
+}
+
+// Анимация иконки корзины
+function animateCartIcon() {
+    const cartIcon = document.querySelector('.cart-icon');
+    cartIcon.style.transform = 'scale(1.3)';
+    setTimeout(() => {
+        cartIcon.style.transform = 'scale(1)';
+    }, 200);
+}
+
+// Изменение количества товара
+function changeQuantity(itemId, delta) {
+    const itemIndex = cart.findIndex(item => item.id === itemId);
+    
+    if (itemIndex !== -1) {
+        cart[itemIndex].quantity += delta;
+        
+        if (cart[itemIndex].quantity <= 0) {
+            cart.splice(itemIndex, 1);
+        }
+        
+        updateCartDisplay();
+    }
+}
+
+// Показать подтверждение очистки корзины
+function showClearConfirmation() {
+    cartState = 'confirmClear';
+    updateCartDisplay();
+}
+
+// Вернуться к просмотру корзины
+function backToCart() {
+    cartState = 'cart';
+    updateCartDisplay();
+}
+
+// Подтверждение очистки корзины
+function confirmClearCart() {
+    cart = [];
+    cartState = 'cart';
+    updateCartDisplay();
+}
+
+// Обновление отображения корзины
+function updateCartDisplay() {
+    const cartCount = document.getElementById('cartCount');
+    const cartTotal = document.getElementById('cartTotal');
+    const cartContent = document.getElementById('cartContent');
+    const cartModalTitle = document.getElementById('cartModalTitle');
+    
+    const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+    const totalPrice = cart.reduce((sum, item) => sum + (item.totalPrice * item.quantity), 0);
+    
+    cartCount.textContent = totalItems;
+    cartTotal.textContent = `${totalPrice} ₽`;
+    
+    if (cartState === 'confirmClear') {
+        cartModalTitle.textContent = 'Очистка корзины';
+        cartContent.innerHTML = `
+            <div class="confirm-clear-content">
+                <p class="confirm-clear-text">Вы уверены, что хотите очистить корзину?</p>
+                <div class="confirm-actions">
+                    <button class="confirm-no-btn" onclick="backToCart()">Нет, вернуться</button>
+                    <button class="confirm-yes-btn" onclick="confirmClearCart()">Да, очистить</button>
+                </div>
+            </div>
+        `;
+        return;
+    }
+    
+    cartModalTitle.textContent = 'Корзина';
+    
+    if (cart.length === 0) {
+        cartContent.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: #666;">
+                <img src="/img/Корзинка.png" width="50px" height="50px" alt="" class="cart-icon">
+                <p style="font-size: 18px; margin-bottom: 10px;">Ваша корзина пуста</p>
+                <p>Добавьте блюда из меню</p>
+            </div>
+        `;
+    } else {
+        cartContent.innerHTML = cart.map(item => `
+            <div class="cart-item">
+                <img src="${item.image}" alt="${item.name}" class="cart-item-image" onerror="this.src='placeholder.jpg'">
+                <div class="cart-item-info">
+                    <div class="cart-item-name">${item.name}</div>
+                    <div class="cart-item-options">
+                        ${item.options.map(opt => `${opt.name} (+${opt.price}₽)`).join(', ')}
+                        <br>
+                        <small>${item.serviceType === 'dine-in' ? 'В зале' : 'На вынос'}</small>
+                    </div>
+                </div>
+                <div class="quantity-controls">
+                    <button class="quantity-btn" onclick="changeQuantity(${item.id}, -1)">−</button>
+                    <span class="quantity-value">${item.quantity}</span>
+                    <button class="quantity-btn" onclick="changeQuantity(${item.id}, 1)">+</button>
+                </div>
+                <div class="cart-item-price">${item.totalPrice * item.quantity} ₽</div>
+            </div>
+        `).join('') + `
+            <div class="cart-summary">
+                <div class="cart-total">Итого: ${totalPrice} ₽</div>
+                <div class="cart-actions">
+                    <button class="clear-cart-btn" onclick="showClearConfirmation()">Очистить корзину</button>
+                    <button class="checkout-btn" onclick="proceedToCheckout()">Продолжить оформление</button>
+                </div>
+            </div>
+        `;
+    }
+}
+
+// Переключение корзины
+function toggleCart() {
+    const cartModal = document.getElementById('cartModal');
+    const checkoutModal = document.getElementById('checkoutModal');
+    
+    if (checkoutModal.classList.contains('active')) {
+        checkoutModal.classList.remove('active');
+        cartModal.classList.add('active');
+    } else {
+        cartModal.classList.toggle('active');
+    }
+    
+    cartState = 'cart';
+    updateCartDisplay();
+}
+
+// Закрытие всех модальных окон
+function closeAllModals() {
+    document.getElementById('cartModal').classList.remove('active');
+    document.getElementById('checkoutModal').classList.remove('active');
+    cartState = 'cart';
+}
+
+// Переход к оформлению заказа
+function proceedToCheckout() {
+    if (cart.length === 0) {
+        alert('Добавьте блюда в корзину');
+        return;
+    }
+    
+    const cartModal = document.getElementById('cartModal');
+    const checkoutModal = document.getElementById('checkoutModal');
+    
+    cartModal.classList.remove('active');
+    checkoutModal.classList.add('active');
+    cartState = 'cart';
+}
+
+// Инициализация Яндекс.Карты
+function initYandexMap() {
+    if (typeof ymaps !== 'undefined') {
+        ymaps.ready(function() {
+            try {
+                yandexMap = new ymaps.Map('yandexMap', {
+                    center: [55.7558, 37.6176],
+                    zoom: 10,
+                    controls: ['zoomControl', 'fullscreenControl']
+                });
+                
+                const restaurants = [
+                    { coordinates: [55.7558, 37.6176], name: 'Ёлки-Иголки - Центр' },
+                    { coordinates: [55.7649, 37.6384], name: 'Ёлки-Иголки - Басманный' },
+                    { coordinates: [55.7415, 37.6253], name: 'Ёлки-Иголки - Якиманка' }
+                ];
+                
+                restaurants.forEach(restaurant => {
+                    const placemark = new ymaps.Placemark(restaurant.coordinates, {
+                        hintContent: restaurant.name,
+                        balloonContent: restaurant.name
+                    }, {
+                        preset: 'islands#redIcon'
+                    });
+                    yandexMap.geoObjects.add(placemark);
+                });
+            } catch(e) {
+                console.error('Ошибка инициализации карты:', e);
+                showMapError();
+            }
+        });
+    } else {
+        showMapError();
+    }
+}
+
+function showMapError() {
+    const mapElement = document.getElementById('yandexMap');
+    if (mapElement) {
+        mapElement.innerHTML = '<p style="text-align: center; padding: 20px; color: #666;">Карта временно недоступна</p>';
+    }
+}
+
+// Настройка отправки формы
+function setupFormSubmission() {
+    const form = document.getElementById('orderForm');
+    
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        if (cart.length === 0) {
+            alert('Корзина пуста!');
+            return;
+        }
+        
+        const submitBtn = form.querySelector('.submit-order-btn');
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = 'Отправка...';
+        submitBtn.disabled = true;
+        
+        const formData = new FormData(form);
+        const orderData = {
+            name: formData.get('name'),
+            phone: formData.get('phone'),
+            comment: formData.get('comment'),
+            order: cart.map(item => ({
+                name: item.name,
+                price: item.totalPrice,
+                quantity: item.quantity,
+                options: item.options.map(opt => opt.name),
+                serviceType: item.serviceType === 'dine-in' ? 'В зале' : 'На вынос'
+            })),
+            totalAmount: cart.reduce((sum, item) => sum + (item.totalPrice * item.quantity), 0)
+        };
+        
+        const success = await sendOrderToTelegram(orderData);
+        
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+        
+        if (success) {
+            alert('✅ Заказ успешно отправлен! Мы свяжемся с вами в ближайшее время.');
+            cart = [];
+            cartState = 'cart';
+            updateCartDisplay();
+            document.getElementById('checkoutModal').classList.remove('active');
+            document.getElementById('cartModal').classList.remove('active');
+            form.reset();
+        }
+    });
+}
+
+// Отправка заказа в Telegram
+async function sendOrderToTelegram(orderData) {
+    const orderText = formatOrderMessage(orderData);
+    
+    console.log('Отправка заказа в Telegram...');
+    
+    try {
+        const url = `https://api.telegram.org/bot${TELEGRAM_CONFIG.botToken}/sendMessage`;
+        
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                chat_id: TELEGRAM_CONFIG.chatId,
+                text: orderText,
+                parse_mode: 'HTML'
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.ok) {
+            console.log('✅ Заказ успешно отправлен в Telegram');
+            return true;
+        } else {
+            console.error('❌ Ошибка отправки в Telegram:', data.description);
+            alert(`Ошибка отправки: ${data.description}\n\nПроверьте правильность токена бота и chat ID`);
+            return false;
+        }
+    } catch (error) {
+        console.error('❌ Ошибка сети:', error);
+        alert('Произошла ошибка при отправке заказа. Проверьте подключение к интернету.');
+        return false;
+    }
+}
+
+// Форматирование сообщения для Telegram
+function formatOrderMessage(orderData) {
+    let message = `🛒 <b>Новый заказ!</b>\n\n`;
+    message += `👤 <b>Имя:</b> ${orderData.name}\n`;
+    message += `📞 <b>Телефон:</b> ${orderData.phone}\n`;
+    
+    if (orderData.comment) {
+        message += `💬 <b>Комментарий:</b> ${orderData.comment}\n`;
+    }
+    
+    message += `\n📋 <b>Заказ:</b>\n`;
+    
+    orderData.order.forEach((item, index) => {
+        message += `${index + 1}. ${item.name} x${item.quantity} - ${item.price * item.quantity}₽\n`;
+        if (item.options.length > 0) {
+            message += `   Дополнительно: ${item.options.join(', ')}\n`;
+        }
+        message += `   ${item.serviceType}\n`;
+    });
+    
+    message += `\n💰 <b>Итого:</b> ${orderData.totalAmount}₽`;
+    message += `\n📅 <b>Дата:</b> ${new Date().toLocaleString('ru-RU')}`;
+    
+    return message;
+}
+
+// Закрытие модальных окон при клике вне их
+window.addEventListener('click', function(e) {
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(modal => {
+        if (e.target === modal) {
+            modal.classList.remove('active');
+            if (modal.id === 'cartModal') {
+                cartState = 'cart';
+            }
+        }
+    });
+});
