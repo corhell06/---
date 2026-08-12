@@ -7,10 +7,10 @@ let cartState = 'cart'; // 'cart' или 'confirmClear'
 // Конфигурация Telegram  
 const TELEGRAM_CONFIG = {
     botToken: '8847713556:AAHYCcfK4nxIRZaH7G3Ag9DmMwLbnBYBCYw',
-    chatId: '1719696586'
+    chatId: '-1004343025374'
 };
 
-// Данные меню - теперь без генерации SVG, используем placeholder
+// Данные меню
 const menuData = {
     soups: {
         title: 'Супы',
@@ -183,16 +183,105 @@ const menuData = {
     }
 };
 
-// Инициализация при загрузке страницы
+//ИНИЦИАЛИЗАЦИЯ
 document.addEventListener('DOMContentLoaded', function() {
     renderMenu();
     setupCategoryLinks();
     setupSearch();
     initYandexMap();
     setupFormSubmission();
+    initCarousel(); // Запускаем карусель
 });
 
-// Отрисовка меню
+//КАРУСЕЛЬ
+function initCarousel() {
+    let currentSlide = 0;
+    let slideInterval = null;
+    const slides = document.querySelectorAll('.carousel-slide');
+    const dotsContainer = document.getElementById('carouselDots');
+
+    // Создаем индикаторы (точки)
+    if (slides.length > 0 && dotsContainer) {
+        dotsContainer.innerHTML = '';
+        slides.forEach((_, index) => {
+            const dot = document.createElement('span');
+            dot.className = 'dot' + (index === 0 ? ' active' : '');
+            dot.dataset.index = index;
+            dot.addEventListener('click', function() {
+                goToSlide(parseInt(this.dataset.index));
+            });
+            dotsContainer.appendChild(dot);
+        });
+    }
+
+    // Функция перехода к слайду
+    function goToSlide(index) {
+        slides.forEach(slide => slide.classList.remove('active'));
+        document.querySelectorAll('.dot').forEach(dot => dot.classList.remove('active'));
+        
+        if (slides[index]) {
+            slides[index].classList.add('active');
+            currentSlide = index;
+        }
+        
+        const dots = document.querySelectorAll('.dot');
+        if (dots[index]) {
+            dots[index].classList.add('active');
+        }
+    }
+
+    // Функция для следующего слайда
+    window.nextSlide = function() {
+        const next = (currentSlide + 1) % slides.length;
+        goToSlide(next);
+        resetInterval();
+    };
+
+    // Функция для предыдущего слайда
+    window.prevSlide = function() {
+        const prev = (currentSlide - 1 + slides.length) % slides.length;
+        goToSlide(prev);
+        resetInterval();
+    };
+
+    // Сброс интервала автопрокрутки
+    function resetInterval() {
+        if (slideInterval) {
+            clearInterval(slideInterval);
+            slideInterval = null;
+        }
+        startAutoSlide();
+    }
+
+    // Запуск автоматической смены слайдов
+    function startAutoSlide() {
+        if (slideInterval) clearInterval(slideInterval);
+        slideInterval = setInterval(() => {
+            const next = (currentSlide + 1) % slides.length;
+            goToSlide(next);
+        }, 5000);
+    }
+
+    // Останавливаем автопрокрутку при наведении на карусель
+    const carouselContainer = document.querySelector('.carousel-container');
+    if (carouselContainer) {
+        carouselContainer.addEventListener('mouseenter', function() {
+            if (slideInterval) {
+                clearInterval(slideInterval);
+                slideInterval = null;
+            }
+        });
+        
+        carouselContainer.addEventListener('mouseleave', function() {
+            startAutoSlide();
+        });
+    }
+
+    // Запускаем автопрокрутку
+    startAutoSlide();
+}
+
+//ОТРИСОВКА МЕНЮ
 function renderMenu() {
     const menuContent = document.getElementById('menuContent');
     menuContent.innerHTML = '';
@@ -222,7 +311,7 @@ function renderMenu() {
     });
 }
 
-// Настройка ссылок категорий
+//КАТЕГОРИИ
 function setupCategoryLinks() {
     const categoryLinks = document.querySelectorAll('.category-link');
     
@@ -248,7 +337,6 @@ function setupCategoryLinks() {
     window.addEventListener('scroll', highlightCategory);
 }
 
-// Подсветка активной категории при скролле
 function highlightCategory() {
     const sections = document.querySelectorAll('.menu-section');
     const categoryLinks = document.querySelectorAll('.category-link');
@@ -271,50 +359,29 @@ function highlightCategory() {
     });
 }
 
-// Настройка поиска
+//ПОИСК
 function setupSearch() {
     const searchInput = document.getElementById('searchInput');
-    const resultsContainer = document.getElementById('searchResults');
-
-        
-        // Автопоиск при вводе (с задержкой)
-        let searchTimeout;
-        searchInput.addEventListener('input', function() {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                searchDishes();
-            }, 300);
-        });
-    }
     
-    // Создаем кнопку очистки результатов
-    if (resultsContainer) {
-        const clearBtn = document.createElement('button');
-        clearBtn.className = 'clear-search-btn';
-        clearBtn.textContent = '✕ Очистить результаты';
-        clearBtn.onclick = function() {
-            document.getElementById('searchInput').value = '';
-            document.getElementById('searchResults').innerHTML = '';
-            this.classList.remove('visible');
-        };
-        resultsContainer.after(clearBtn);
-    }
+    let searchTimeout;
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            searchDishes();
+        }, 300);
+    });
+}
 
-
-// Поиск блюд
 function searchDishes() {
     const input = document.getElementById('searchInput');
     const query = input.value.trim().toLowerCase();
     const resultsContainer = document.getElementById('searchResults');
-    const clearBtn = document.querySelector('.clear-search-btn');
     
     if (!query) {
         resultsContainer.innerHTML = '';
-        if (clearBtn) clearBtn.classList.remove('visible');
         return;
     }
     
-    // Собираем все блюда из всех категорий
     let allDishes = [];
     Object.entries(menuData).forEach(([categoryId, category]) => {
         category.dishes.forEach(dish => {
@@ -326,7 +393,6 @@ function searchDishes() {
         });
     });
     
-    // Фильтруем по названию (регистронезависимый поиск)
     const results = allDishes.filter(dish => 
         dish.name.toLowerCase().includes(query)
     );
@@ -349,11 +415,9 @@ function searchDishes() {
             </div>
         `).join('');
     }
-    
-    if (clearBtn) clearBtn.classList.add('visible');
 }
 
-// Открытие деталей блюда
+//ДЕТАЛИ БЛЮДА
 function openDishDetail(dishId, categoryId) {
     const category = menuData[categoryId];
     const dish = category.dishes.find(d => d.id === dishId);
@@ -420,13 +484,12 @@ function openDishDetail(dishId, categoryId) {
     }
 }
 
-// Закрытие модального окна блюда
 function closeDishModal() {
     document.getElementById('dishModal').classList.remove('active');
     currentDish = null;
 }
 
-// Добавление в корзину из деталей
+//КОРЗИНА
 function addToCartFromDetail() {
     if (!currentDish) return;
     
@@ -446,7 +509,6 @@ function addToCartFromDetail() {
         }
     });
     
-    // Проверяем, есть ли уже такое блюдо в корзине
     const existingItemIndex = cart.findIndex(item => 
         item.dishId === currentDish.id && 
         item.serviceType === serviceType &&
@@ -474,20 +536,8 @@ function addToCartFromDetail() {
     
     updateCartDisplay();
     closeDishModal();
-    
-    animateCartIcon();
 }
 
-// Анимация иконки корзины
-function animateCartIcon() {
-    const cartIcon = document.querySelector('.cart-icon');
-    cartIcon.style.transform = 'scale(1.3)';
-    setTimeout(() => {
-        cartIcon.style.transform = 'scale(1)';
-    }, 200);
-}
-
-// Изменение количества товара
 function changeQuantity(itemId, delta) {
     const itemIndex = cart.findIndex(item => item.id === itemId);
     
@@ -502,26 +552,22 @@ function changeQuantity(itemId, delta) {
     }
 }
 
-// Показать подтверждение очистки корзины
 function showClearConfirmation() {
     cartState = 'confirmClear';
     updateCartDisplay();
 }
 
-// Вернуться к просмотру корзины
 function backToCart() {
     cartState = 'cart';
     updateCartDisplay();
 }
 
-// Подтверждение очистки корзины
 function confirmClearCart() {
     cart = [];
     cartState = 'cart';
     updateCartDisplay();
 }
 
-// Обновление отображения корзины
 function updateCartDisplay() {
     const cartCount = document.getElementById('cartCount');
     const cartTotal = document.getElementById('cartTotal');
@@ -589,7 +635,6 @@ function updateCartDisplay() {
     }
 }
 
-// Переключение корзины
 function toggleCart() {
     const cartModal = document.getElementById('cartModal');
     const checkoutModal = document.getElementById('checkoutModal');
@@ -605,14 +650,12 @@ function toggleCart() {
     updateCartDisplay();
 }
 
-// Закрытие всех модальных окон
 function closeAllModals() {
     document.getElementById('cartModal').classList.remove('active');
     document.getElementById('checkoutModal').classList.remove('active');
     cartState = 'cart';
 }
 
-// Переход к оформлению заказа
 function proceedToCheckout() {
     if (cart.length === 0) {
         alert('Добавьте блюда в корзину');
@@ -627,7 +670,7 @@ function proceedToCheckout() {
     cartState = 'cart';
 }
 
-// Инициализация Яндекс.Карты
+//ЯНДЕКС КАРТА
 function initYandexMap() {
     if (typeof ymaps !== 'undefined') {
         ymaps.ready(function() {
@@ -670,7 +713,7 @@ function showMapError() {
     }
 }
 
-// Настройка отправки формы
+//ОТПРАВКА ЗАКАЗА
 function setupFormSubmission() {
     const form = document.getElementById('orderForm');
     
@@ -719,7 +762,6 @@ function setupFormSubmission() {
     });
 }
 
-// Отправка заказа в Telegram
 async function sendOrderToTelegram(orderData) {
     const orderText = formatOrderMessage(orderData);
     
@@ -757,7 +799,6 @@ async function sendOrderToTelegram(orderData) {
     }
 }
 
-// Форматирование сообщения для Telegram
 function formatOrderMessage(orderData) {
     let message = `🛒 <b>Новый заказ!</b>\n\n`;
     message += `👤 <b>Имя:</b> ${orderData.name}\n`;
@@ -783,7 +824,7 @@ function formatOrderMessage(orderData) {
     return message;
 }
 
-// Закрытие модальных окон при клике вне их
+//ЗАКРЫТИЕ МОДАЛЬНЫХ ОКОН
 window.addEventListener('click', function(e) {
     const modals = document.querySelectorAll('.modal');
     modals.forEach(modal => {
