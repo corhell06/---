@@ -11,15 +11,60 @@
 <body>
     <!-- Шапка сайта -->
     <header class="header">
-        <div class="container header-content">
-            <h1 class="restaurant-name">Ёлки-Иголки</h1>
-            <button class="cart-button" onclick="toggleCart()">
-                <img src="/img/Корзинка.png" width="35px" height="35px" alt="">
-                <span class="cart-count" id="cartCount">0</span>
-                <span class="cart-total" id="cartTotal">0 ₽</span>
-            </button>
+    <div class="container header-content">
+        <a href="/" class="logo-link">
+            <img src="img/Ёлки-Иголки.png" alt="Ёлки-Иголки" class="logo-image">
+        </a>
+        <button class="cart-button" onclick="toggleCart()">
+            <img src="/img/Корзинка.png" width="35px" height="35px" alt="Корзина">
+            <span class="cart-count" id="cartCount">0</span>
+            <span class="cart-total" id="cartTotal">0 ₽</span>
+        </button>
+    </div>
+</header>
+
+    <!--ПАНЕЛЬ КАРУСЕЛИ-->
+    <section class="hero-carousel">
+        <div class="container">
+            <div class="carousel-container">
+                <div class="carousel-slides" id="carouselSlides">
+                    <div class="carousel-slide active">
+                        <img src="img/баннер1.png" alt="Добро пожаловать в Ёлки-Иголки" onerror="this.src='https://via.placeholder.com/1200x400/8D9D78/FDFBF7?text=Добро+пожаловать+в+Ёлки-Иголки'">
+                        <div class="carousel-caption">
+                            <h2>Аутентичная русская кухня</h2>
+                            <p>Традиционные рецепты в современном исполнении</p>
+                        </div>
+                    </div>
+                    <div class="carousel-slide">
+                        <img src="img/баннер2.jpg" alt="Свежие продукты" onerror="this.src='https://via.placeholder.com/1200x400/C46C48/FDFBF7?text=Свежие+продукты+каждый+день'">
+                        <div class="carousel-caption">
+                            <h2>Только свежие продукты</h2>
+                            <p>Мы выбираем лучшее для наших гостей</p>
+                        </div>
+                    </div>
+                    <div class="carousel-slide">
+                        <img src="img/баннер3.jpg" alt="Уютная атмосфера" onerror="this.src='https://via.placeholder.com/1200x400/A85C3A/FDFBF7?text=Уютная+атмосфера'">
+                        <div class="carousel-caption">
+                            <h2>Уютная атмосфера</h2>
+                            <p>Идеальное место для встреч с близкими</p>
+                        </div>
+                    </div>
+                    <div class="carousel-slide">
+                        <img src="img/баннер4.jpg" alt="Бесплатная доставка" onerror="this.src='https://via.placeholder.com/1200x400/6B7A5A/FDFBF7?text=Бесплатная+доставка'">
+                        <div class="carousel-caption">
+                            <h2>Бесплатная доставка</h2>
+                            <p>При заказе от 1500 ₽</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- Кнопки навигации -->
+                <button class="carousel-btn prev-btn" onclick="prevSlide()">❮</button>
+                <button class="carousel-btn next-btn" onclick="nextSlide()">❯</button>
+                <!-- Индикаторы (точки) -->
+                <div class="carousel-dots" id="carouselDots"></div>
+            </div>
         </div>
-    </header>
+    </section>
 
     <!-- Основной контент -->
     <main class="main-content">
@@ -120,11 +165,11 @@
         <div class="container">
             <div class="footer-content">
                 <div class="footer-info">
-                    <h3>Ресторан "Жратва"</h3>
+                    <h3>Ресторан "Ёлки-Иголки"</h3>
                     <p>Аутентичная русская кухня в современном исполнении</p>
                     <p>📍 г. Москва, ул. Русская, д. 1</p>
                     <p>📞 +7 (999) 123-45-67</p>
-                    <p>✉️ info@jratva.ru</p>
+                    <p>✉️ info@yolki-igolki.ru</p>
                 </div>
                 <div class="footer-hours">
                     <h3>Часы работы</h3>
@@ -132,8 +177,6 @@
                     <p>Пт-Сб: 12:00 - 02:00</p>
                     <p>Вс: 12:00 - 22:00</p>
                 </div>
-            </div>
-            <div class="footer-bottom">
             </div>
         </div>
     </footer>
