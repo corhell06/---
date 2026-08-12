@@ -7,7 +7,7 @@ let cartState = 'cart'; // 'cart' или 'confirmClear'
 // Конфигурация Telegram  
 const TELEGRAM_CONFIG = {
     botToken: '8847713556:AAHYCcfK4nxIRZaH7G3Ag9DmMwLbnBYBCYw',
-    chatId: '-1004343025374'
+    chatId: '-5591191947'
 };
 
 // Данные меню
