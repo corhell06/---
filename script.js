@@ -618,10 +618,6 @@ function updateCartDisplay() {
         cartContent.innerHTML = `
             <div style="text-align: center; padding: 40px; color: #666;">
                 <img src="/img/Корзинка.png" width="50px" height="50px" alt="Корзина">
-                    <circle cx="9" cy="21" r="1"/>
-                    <circle cx="20" cy="21" r="1"/>
-                    <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/>
-                </svg>
                 <p style="font-size: 18px; margin-bottom: 10px;">Ваша корзина пуста</p>
                 <p>Добавьте блюда из меню</p>
             </div>
@@ -684,7 +680,7 @@ function closeAllModals() {
 
 function proceedToCheckout() {
     if (cart.length === 0) {
-        alert('Добавьте блюда в корзину');
+        showToast('error', 'Корзина пуста', 'Добавьте блюда перед оформлением заказа');
         return;
     }
     
@@ -742,6 +738,60 @@ function showMapError() {
     }
 }
 
+// Функция для отображения toast-уведомлений
+function showToast(type, title, message) {
+    // Создаем контейнер для уведомлений, если его нет
+    let container = document.querySelector('.toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+    }
+    
+    // Создаем toast
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    
+    const icon = type === 'success' ? '✅' : '❌';
+    
+    toast.innerHTML = `
+        <span class="toast-icon">${icon}</span>
+        <div class="toast-content">
+            <div class="toast-title">${title}</div>
+            <div class="toast-message">${message}</div>
+        </div>
+        <button class="toast-close" onclick="closeToast(this)">×</button>
+        <div class="toast-progress"></div>
+    `;
+    
+    container.appendChild(toast);
+    
+    // Автоматическое закрытие через 5 секунд
+    setTimeout(() => {
+        closeToast(toast.querySelector('.toast-close'));
+    }, 5000);
+}
+
+// Функция для закрытия toast
+function closeToast(closeBtn) {
+    const toast = closeBtn.closest('.toast');
+    if (toast) {
+        toast.style.animation = 'slideOutRight 0.3s ease forwards';
+        setTimeout(() => {
+            toast.remove();
+            // Удаляем контейнер, если в нем нет уведомлений
+            const container = document.querySelector('.toast-container');
+            if (container && container.children.length === 0) {
+                container.remove();
+            }
+        }, 300);
+    }
+}
+
+// Делаем функции глобальными
+window.closeToast = closeToast;
+window.showToast = showToast;
+
 // ОТПРАВКА ЗАКАЗА ЧЕРЕЗ NETLIFY FUNCTIONS
 function setupFormSubmission() {
     const form = document.getElementById('orderForm');
@@ -751,7 +801,7 @@ function setupFormSubmission() {
         e.preventDefault();
         
         if (cart.length === 0) {
-            alert('Корзина пуста!');
+            showToast('error', 'Корзина пуста', 'Добавьте блюда перед оформлением заказа');
             return;
         }
         
@@ -792,24 +842,31 @@ function setupFormSubmission() {
             submitBtn.disabled = false;
             
             if (data.success) {
-                alert('✅ Заказ успешно отправлен! Мы свяжемся с вами в ближайшее время.');
-                cart = [];
-                cartState = 'cart';
-                updateCartDisplay();
-                
+                // Закрываем окно оформления заказа
                 const checkoutModal = document.getElementById('checkoutModal');
                 const cartModal = document.getElementById('cartModal');
                 if (checkoutModal) checkoutModal.classList.remove('active');
                 if (cartModal) cartModal.classList.remove('active');
+                
+                // Показываем уведомление об успехе
+                showToast('success', 'Заказ успешно отправлен! 🎉', 'Мы свяжемся с вами в ближайшее время');
+                
+                // Очищаем корзину и форму
+                cart = [];
+                cartState = 'cart';
+                updateCartDisplay();
                 form.reset();
             } else {
-                alert('❌ Ошибка отправки: ' + (data.error || 'Неизвестная ошибка'));
+                // Показываем уведомление об ошибке
+                showToast('error', 'Ошибка отправки', data.error || 'Неизвестная ошибка, попробуйте позже');
             }
         } catch (error) {
             submitBtn.textContent = originalText;
             submitBtn.disabled = false;
             console.error('Ошибка:', error);
-            alert('❌ Произошла ошибка при отправке заказа. Пожалуйста, попробуйте позже.');
+            
+            // Показываем уведомление об ошибке
+            showToast('error', 'Ошибка соединения', 'Проверьте интернет-соединение и попробуйте снова');
         }
     });
 }
