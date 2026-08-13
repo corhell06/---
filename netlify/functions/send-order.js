@@ -87,7 +87,19 @@ function formatOrderMessage(orderData) {
     });
     
     message += `\n💰 <b>Итого:</b> ${orderData.totalAmount}₽`;
-    message += `\n📅 <b>Дата:</b> ${new Date().toLocaleString('ru-RU')}`;
+    const now = new Date();
+    const moscowTime = new Date(now.getTime() + (3 * 60 * 60 * 1000)); // +3 часа
+    const formattedDate = moscowTime.toLocaleString('ru-RU', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        timeZone: 'Europe/Moscow' // Явно указываем часовой пояс
+    });
+    
+    message += `\n📅 <b>Дата:</b> ${formattedDate} (МСК)`;
     
     return message;
 }
