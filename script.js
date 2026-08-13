@@ -604,7 +604,7 @@ function updateCartDisplay() {
     if (cart.length === 0) {
         cartContent.innerHTML = `
             <div style="text-align: center; padding: 40px; color: #666;">
-                <img src="/img/Корзинка.png" width="50px" height="35px" alt="Корзина">
+                <img src="/img/Корзинка.png" width="50px" height="50px" alt="Корзина">
                     <circle cx="9" cy="21" r="1"/>
                     <circle cx="20" cy="21" r="1"/>
                     <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/>
