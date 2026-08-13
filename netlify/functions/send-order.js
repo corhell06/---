@@ -69,8 +69,8 @@ exports.handler = async function(event, context) {
 
 function formatOrderMessage(orderData) {
     let message = `🛒 <b>Новый заказ!</b>\n\n`;
-    message += `👤 <b>Имя:</b> ${orderData.name}\n`;
-    message += `📞 <b>Телефон:</b> ${orderData.phone}\n`;
+    message += `👤 <b>Имя:</b> ${orderData.name || 'Не указано'}\n`;
+    message += `📞 <b>Телефон:</b> ${orderData.phone || 'Не указан'}\n`;
     
     if (orderData.comment) {
         message += `💬 <b>Комментарий:</b> ${orderData.comment}\n`;
@@ -78,27 +78,36 @@ function formatOrderMessage(orderData) {
     
     message += `\n📋 <b>Заказ:</b>\n`;
     
-    orderData.order.forEach((item, index) => {
-        message += `${index + 1}. ${item.name} x${item.quantity} - ${item.price * item.quantity}₽\n`;
-        if (item.options && item.options.length > 0) {
-            message += `   Дополнительно: ${item.options.join(', ')}\n`;
-        }
-        message += `   ${item.serviceType}\n`;
-    });
+    if (orderData.order && orderData.order.length > 0) {
+        orderData.order.forEach((item, index) => {
+            message += `${index + 1}. ${item.name} x${item.quantity} - ${item.price * item.quantity}₽\n`;
+            if (item.options && item.options.length > 0) {
+                message += `   Дополнительно: ${item.options.join(', ')}\n`;
+            }
+            message += `   ${item.serviceType || 'В зале'}\n`;
+        });
+    } else {
+        message += `Пустой заказ\n`;
+    }
     
-    message += `\n💰 <b>Итого:</b> ${orderData.totalAmount}₽`;
+    message += `\n💰 <b>Итого:</b> ${orderData.totalAmount || 0}₽`;
+    
+    // ✅ ПРАВИЛЬНЫЙ СПОСОБ - Используем timeZone
     const now = new Date();
-    const moscowTime = new Date(now.getTime() + (3 * 60 * 60 * 1000)); // +3 часа
-    const formattedDate = moscowTime.toLocaleString('ru-RU', {
+    const formattedDate = now.toLocaleString('ru-RU', {
+        timeZone: 'Europe/Moscow',
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
-        second: '2-digit',
-        timeZone: 'Europe/Moscow' // Явно указываем часовой пояс
+        second: '2-digit'
     });
     
+    message += `\n📅 <b>Дата:</b> ${formattedDate} (МСК)`;
+    
+    return message;
+}
     message += `\n📅 <b>Дата:</b> ${formattedDate} (МСК)`;
     
     return message;
