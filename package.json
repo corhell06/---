@@ -1,0 +1,25 @@
+{
+  "name": "restaurant-order-system",
+  "version": "1.0.0",
+  "description": "Онлайн-заказ еды с отправкой в Telegram",
+  "main": "index.html",
+  "scripts": {
+    "start": "netlify dev",
+    "build": "echo 'No build step required'",
+    "deploy": "netlify deploy --prod"
+  },
+  "dependencies": {
+    "@netlify/functions": "^2.0.0"
+  },
+  "devDependencies": {
+    "netlify-cli": "^17.0.0"
+  },
+  "keywords": [
+    "restaurant",
+    "order",
+    "telegram",
+    "netlify"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}
