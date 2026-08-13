@@ -1,3 +1,4 @@
+// netlify/functions/send-order.js
 exports.handler = async function(event, context) {
     // Разрешаем только POST-запросы
     if (event.httpMethod !== 'POST') {
@@ -8,25 +9,53 @@ exports.handler = async function(event, context) {
     }
 
     try {
-        const orderData = JSON.parse(event.body);
-        
-        // ✅ Берем токен из переменных окружения
+        // 1. Проверяем наличие BOT_TOKEN
         const BOT_TOKEN = process.env.BOT_TOKEN;
-        
         if (!BOT_TOKEN) {
             console.error('❌ BOT_TOKEN не найден в переменных окружения!');
             return {
                 statusCode: 500,
                 body: JSON.stringify({ 
                     success: false, 
-                    error: 'Ошибка конфигурации сервера' 
+                    error: 'BOT_TOKEN не настроен. Добавьте переменную окружения в Netlify.' 
                 })
             };
         }
-        
+
+        // 2. Парсим данные
+        let orderData;
+        try {
+            orderData = JSON.parse(event.body);
+        } catch (parseError) {
+            console.error('❌ Ошибка парсинга JSON:', parseError);
+            return {
+                statusCode: 400,
+                body: JSON.stringify({ 
+                    success: false, 
+                    error: 'Неверный формат данных' 
+                })
+            };
+        }
+
+        // 3. Проверяем наличие chatId
+        if (!orderData.chatId) {
+            console.error('❌ Chat ID отсутствует в запросе');
+            return {
+                statusCode: 400,
+                body: JSON.stringify({ 
+                    success: false, 
+                    error: 'Отсутствует Chat ID' 
+                })
+            };
+        }
+
+        // 4. Форматируем сообщение
         const message = formatOrderMessage(orderData);
-        
-        const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        console.log('📤 Отправка сообщения в Telegram...');
+
+        // 5. Отправляем в Telegram
+        const telegramUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+        const telegramResponse = await fetch(telegramUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -37,36 +66,55 @@ exports.handler = async function(event, context) {
                 parse_mode: 'HTML'
             })
         });
-        
-        const data = await response.json();
-        
-        if (data.ok) {
+
+        const telegramData = await telegramResponse.json();
+        console.log('📥 Ответ от Telegram:', telegramData);
+
+        // 6. Проверяем ответ Telegram
+        if (telegramData.ok) {
             return {
                 statusCode: 200,
-                body: JSON.stringify({ success: true })
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                },
+                body: JSON.stringify({ 
+                    success: true,
+                    message: 'Заказ успешно отправлен!'
+                })
             };
         } else {
-            console.error('Telegram API error:', data);
+            console.error('❌ Ошибка Telegram API:', telegramData);
             return {
                 statusCode: 400,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                },
                 body: JSON.stringify({ 
                     success: false, 
-                    error: data.description || 'Ошибка Telegram API' 
+                    error: telegramData.description || 'Ошибка отправки в Telegram' 
                 })
             };
         }
+
     } catch (error) {
-        console.error('Server error:', error);
+        console.error('❌ Общая ошибка:', error);
         return {
             statusCode: 500,
+            headers: {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            },
             body: JSON.stringify({ 
                 success: false, 
-                error: 'Внутренняя ошибка сервера' 
+                error: 'Внутренняя ошибка сервера: ' + error.message 
             })
         };
     }
 };
 
+// Функция форматирования сообщения
 function formatOrderMessage(orderData) {
     let message = `🛒 <b>Новый заказ!</b>\n\n`;
     message += `👤 <b>Имя:</b> ${orderData.name || 'Не указано'}\n`;
@@ -91,24 +139,7 @@ function formatOrderMessage(orderData) {
     }
     
     message += `\n💰 <b>Итого:</b> ${orderData.totalAmount || 0}₽`;
-    
-    // ✅ ПРАВИЛЬНЫЙ СПОСОБ - Используем timeZone
-    const now = new Date();
-    const formattedDate = now.toLocaleString('ru-RU', {
-        timeZone: 'Europe/Moscow',
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-    });
-    
-    message += `\n📅 <b>Дата:</b> ${formattedDate} (МСК)`;
-    
-    return message;
-}
-    message += `\n📅 <b>Дата:</b> ${formattedDate} (МСК)`;
+    message += `\n📅 <b>Дата:</b> ${new Date().toLocaleString('ru-RU')}`;
     
     return message;
 }
