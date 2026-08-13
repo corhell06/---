@@ -439,10 +439,10 @@ function openDishDetail(dishId, categoryId) {
             
             <div class="options-group">
                 <h4>Дополнительные услуги</h4>
-                ${dish.options.map(option => `
-                    <div class="option-item">
+                ${dish.options.map((option, index) => `
+                    <div class="option-item" onclick="toggleOption(${index})">
                         <label>
-                            <input type="checkbox" class="option-checkbox" data-name="${option.name}" data-price="${option.price}">
+                            <input type="checkbox" class="option-checkbox" data-index="${index}" data-name="${option.name}" data-price="${option.price}">
                             ${option.name} (+${option.price} ₽)
                         </label>
                     </div>
@@ -468,10 +468,7 @@ function openDishDetail(dishId, categoryId) {
     const checkboxes = content.querySelectorAll('.option-checkbox');
     const priceButton = content.querySelector('.add-to-cart-btn');
     
-    checkboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', updateTotalPrice);
-    });
-    
+    // Функция для обновления цены
     function updateTotalPrice() {
         let totalPrice = dish.price;
         checkboxes.forEach(cb => {
@@ -480,6 +477,22 @@ function openDishDetail(dishId, categoryId) {
             }
         });
         priceButton.textContent = `Добавить в корзину - ${totalPrice} ₽`;
+    }
+    
+    // Добавляем обработчики на каждый чекбокс
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateTotalPrice);
+    });
+}
+
+// Функция для переключения чекбокса при клике на весь блок
+function toggleOption(index) {
+    const checkboxes = document.querySelectorAll('.option-checkbox');
+    if (checkboxes[index]) {
+        checkboxes[index].checked = !checkboxes[index].checked;
+        // Триггерим событие change для обновления цены
+        const event = new Event('change');
+        checkboxes[index].dispatchEvent(event);
     }
 }
 
