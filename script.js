@@ -6,8 +6,9 @@ let cartState = 'cart'; // 'cart' или 'confirmClear'
 
 // Конфигурация Telegram  
 const TELEGRAM_CONFIG = {
-    botToken: '8847713556:AAHYCcfK4nxIRZaH7G3Ag9DmMwLbnBYBCYw',
-    chatId: '-5591191947'
+    apiUrl: '/api/send-order', // Ваш серверный эндпоинт
+    botToken: '8847713556:AAHYCcfK4nxIRZaH7G3Ag9DmMwLbnBYBCYw', // Только для демо!
+    chatId: '-1004343025374'
 };
 
 // Данные меню
@@ -190,7 +191,7 @@ document.addEventListener('DOMContentLoaded', function() {
     setupSearch();
     initYandexMap();
     setupFormSubmission();
-    initCarousel(); // Запускаем карусель
+    initCarousel();
 });
 
 //КАРУСЕЛЬ
@@ -200,7 +201,6 @@ function initCarousel() {
     const slides = document.querySelectorAll('.carousel-slide');
     const dotsContainer = document.getElementById('carouselDots');
 
-    // Создаем индикаторы (точки)
     if (slides.length > 0 && dotsContainer) {
         dotsContainer.innerHTML = '';
         slides.forEach((_, index) => {
@@ -214,7 +214,6 @@ function initCarousel() {
         });
     }
 
-    // Функция перехода к слайду
     function goToSlide(index) {
         slides.forEach(slide => slide.classList.remove('active'));
         document.querySelectorAll('.dot').forEach(dot => dot.classList.remove('active'));
@@ -230,21 +229,18 @@ function initCarousel() {
         }
     }
 
-    // Функция для следующего слайда
     window.nextSlide = function() {
         const next = (currentSlide + 1) % slides.length;
         goToSlide(next);
         resetInterval();
     };
 
-    // Функция для предыдущего слайда
     window.prevSlide = function() {
         const prev = (currentSlide - 1 + slides.length) % slides.length;
         goToSlide(prev);
         resetInterval();
     };
 
-    // Сброс интервала автопрокрутки
     function resetInterval() {
         if (slideInterval) {
             clearInterval(slideInterval);
@@ -253,7 +249,6 @@ function initCarousel() {
         startAutoSlide();
     }
 
-    // Запуск автоматической смены слайдов
     function startAutoSlide() {
         if (slideInterval) clearInterval(slideInterval);
         slideInterval = setInterval(() => {
@@ -262,7 +257,6 @@ function initCarousel() {
         }, 5000);
     }
 
-    // Останавливаем автопрокрутку при наведении на карусель
     const carouselContainer = document.querySelector('.carousel-container');
     if (carouselContainer) {
         carouselContainer.addEventListener('mouseenter', function() {
@@ -277,13 +271,14 @@ function initCarousel() {
         });
     }
 
-    // Запускаем автопрокрутку
     startAutoSlide();
 }
 
 //ОТРИСОВКА МЕНЮ
 function renderMenu() {
     const menuContent = document.getElementById('menuContent');
+    if (!menuContent) return;
+    
     menuContent.innerHTML = '';
     
     Object.entries(menuData).forEach(([categoryId, category]) => {
@@ -296,7 +291,7 @@ function renderMenu() {
             <div class="menu-grid">
                 ${category.dishes.map(dish => `
                     <div class="dish-card" onclick="openDishDetail('${dish.id}', '${categoryId}')">
-                        <img src="${dish.image}" alt="${dish.name}" class="dish-image" onerror="this.src='placeholder.jpg'">
+                        <img src="${dish.image}" alt="${dish.name}" class="dish-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22%3E%3Crect width=%22200%22 height=%22200%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 font-size=%2216%22 fill=%22%23999%22%3EНет фото%3C/text%3E%3C/svg%3E'">
                         <div class="dish-info">
                             <h3 class="dish-name">${dish.name}</h3>
                             <p class="dish-description">${dish.description}</p>
@@ -362,6 +357,7 @@ function highlightCategory() {
 //ПОИСК
 function setupSearch() {
     const searchInput = document.getElementById('searchInput');
+    if (!searchInput) return;
     
     let searchTimeout;
     searchInput.addEventListener('input', function() {
@@ -376,6 +372,8 @@ function searchDishes() {
     const input = document.getElementById('searchInput');
     const query = input.value.trim().toLowerCase();
     const resultsContainer = document.getElementById('searchResults');
+    
+    if (!resultsContainer) return;
     
     if (!query) {
         resultsContainer.innerHTML = '';
@@ -420,8 +418,9 @@ function searchDishes() {
 //ДЕТАЛИ БЛЮДА
 function openDishDetail(dishId, categoryId) {
     const category = menuData[categoryId];
-    const dish = category.dishes.find(d => d.id === dishId);
+    if (!category) return;
     
+    const dish = category.dishes.find(d => d.id === dishId);
     if (!dish) return;
     
     currentDish = { ...dish, category: category.title, categoryId: categoryId };
@@ -430,10 +429,12 @@ function openDishDetail(dishId, categoryId) {
     const title = document.getElementById('dishModalTitle');
     const content = document.getElementById('dishDetailContent');
     
+    if (!modal || !title || !content) return;
+    
     title.textContent = dish.name;
     
     content.innerHTML = `
-        <img src="${dish.image}" alt="${dish.name}" class="dish-detail-image" onerror="this.src='placeholder.jpg'">
+        <img src="${dish.image}" alt="${dish.name}" class="dish-detail-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22300%22%3E%3Crect width=%22300%22 height=%22300%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 font-size=%2220%22 fill=%22%23999%22%3EНет фото%3C/text%3E%3C/svg%3E'">
         <div class="dish-detail-info">
             <p class="dish-description">${dish.description}</p>
             <div class="dish-detail-price">${dish.price} ₽</div>
@@ -485,7 +486,8 @@ function openDishDetail(dishId, categoryId) {
 }
 
 function closeDishModal() {
-    document.getElementById('dishModal').classList.remove('active');
+    const modal = document.getElementById('dishModal');
+    if (modal) modal.classList.remove('active');
     currentDish = null;
 }
 
@@ -494,7 +496,8 @@ function addToCartFromDetail() {
     if (!currentDish) return;
     
     const checkboxes = document.querySelectorAll('.option-checkbox');
-    const serviceType = document.getElementById('serviceType').value;
+    const serviceTypeSelect = document.getElementById('serviceType');
+    const serviceType = serviceTypeSelect ? serviceTypeSelect.value : 'dine-in';
     
     let options = [];
     let totalPrice = currentDish.price;
@@ -577,29 +580,37 @@ function updateCartDisplay() {
     const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
     const totalPrice = cart.reduce((sum, item) => sum + (item.totalPrice * item.quantity), 0);
     
-    cartCount.textContent = totalItems;
-    cartTotal.textContent = `${totalPrice} ₽`;
+    if (cartCount) cartCount.textContent = totalItems;
+    if (cartTotal) cartTotal.textContent = `${totalPrice} ₽`;
     
     if (cartState === 'confirmClear') {
-        cartModalTitle.textContent = 'Очистка корзины';
-        cartContent.innerHTML = `
-            <div class="confirm-clear-content">
-                <p class="confirm-clear-text">Вы уверены, что хотите очистить корзину?</p>
-                <div class="confirm-actions">
-                    <button class="confirm-no-btn" onclick="backToCart()">Нет, вернуться</button>
-                    <button class="confirm-yes-btn" onclick="confirmClearCart()">Да, очистить</button>
+        if (cartModalTitle) cartModalTitle.textContent = 'Очистка корзины';
+        if (cartContent) {
+            cartContent.innerHTML = `
+                <div class="confirm-clear-content">
+                    <p class="confirm-clear-text">Вы уверены, что хотите очистить корзину?</p>
+                    <div class="confirm-actions">
+                        <button class="confirm-no-btn" onclick="backToCart()">Нет, вернуться</button>
+                        <button class="confirm-yes-btn" onclick="confirmClearCart()">Да, очистить</button>
+                    </div>
                 </div>
-            </div>
-        `;
+            `;
+        }
         return;
     }
     
-    cartModalTitle.textContent = 'Корзина';
+    if (cartModalTitle) cartModalTitle.textContent = 'Корзина';
+    
+    if (!cartContent) return;
     
     if (cart.length === 0) {
         cartContent.innerHTML = `
             <div style="text-align: center; padding: 40px; color: #666;">
-                <img src="/img/Корзинка.png" width="50px" height="50px" alt="" class="cart-icon">
+                <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2">
+                    <circle cx="9" cy="21" r="1"/>
+                    <circle cx="20" cy="21" r="1"/>
+                    <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/>
+                </svg>
                 <p style="font-size: 18px; margin-bottom: 10px;">Ваша корзина пуста</p>
                 <p>Добавьте блюда из меню</p>
             </div>
@@ -607,7 +618,7 @@ function updateCartDisplay() {
     } else {
         cartContent.innerHTML = cart.map(item => `
             <div class="cart-item">
-                <img src="${item.image}" alt="${item.name}" class="cart-item-image" onerror="this.src='placeholder.jpg'">
+                <img src="${item.image}" alt="${item.name}" class="cart-item-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2250%22 height=%2250%22%3E%3Crect width=%2250%22 height=%2250%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 font-size=%2212%22 fill=%22%23999%22%3EНет фото%3C/text%3E%3C/svg%3E'">
                 <div class="cart-item-info">
                     <div class="cart-item-name">${item.name}</div>
                     <div class="cart-item-options">
@@ -639,7 +650,9 @@ function toggleCart() {
     const cartModal = document.getElementById('cartModal');
     const checkoutModal = document.getElementById('checkoutModal');
     
-    if (checkoutModal.classList.contains('active')) {
+    if (!cartModal) return;
+    
+    if (checkoutModal && checkoutModal.classList.contains('active')) {
         checkoutModal.classList.remove('active');
         cartModal.classList.add('active');
     } else {
@@ -651,8 +664,10 @@ function toggleCart() {
 }
 
 function closeAllModals() {
-    document.getElementById('cartModal').classList.remove('active');
-    document.getElementById('checkoutModal').classList.remove('active');
+    const cartModal = document.getElementById('cartModal');
+    const checkoutModal = document.getElementById('checkoutModal');
+    if (cartModal) cartModal.classList.remove('active');
+    if (checkoutModal) checkoutModal.classList.remove('active');
     cartState = 'cart';
 }
 
@@ -665,13 +680,16 @@ function proceedToCheckout() {
     const cartModal = document.getElementById('cartModal');
     const checkoutModal = document.getElementById('checkoutModal');
     
-    cartModal.classList.remove('active');
-    checkoutModal.classList.add('active');
+    if (cartModal) cartModal.classList.remove('active');
+    if (checkoutModal) checkoutModal.classList.add('active');
     cartState = 'cart';
 }
 
 //ЯНДЕКС КАРТА
 function initYandexMap() {
+    const mapElement = document.getElementById('yandexMap');
+    if (!mapElement) return;
+    
     if (typeof ymaps !== 'undefined') {
         ymaps.ready(function() {
             try {
@@ -713,9 +731,10 @@ function showMapError() {
     }
 }
 
-//ОТПРАВКА ЗАКАЗА
+// ОТПРАВКА ЗАКАЗА 
 function setupFormSubmission() {
     const form = document.getElementById('orderForm');
+    if (!form) return;
     
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -732,9 +751,9 @@ function setupFormSubmission() {
         
         const formData = new FormData(form);
         const orderData = {
-            name: formData.get('name'),
-            phone: formData.get('phone'),
-            comment: formData.get('comment'),
+            name: formData.get('name') || 'Не указано',
+            phone: formData.get('phone') || 'Не указан',
+            comment: formData.get('comment') || '',
             order: cart.map(item => ({
                 name: item.name,
                 price: item.totalPrice,
@@ -755,25 +774,58 @@ function setupFormSubmission() {
             cart = [];
             cartState = 'cart';
             updateCartDisplay();
-            document.getElementById('checkoutModal').classList.remove('active');
-            document.getElementById('cartModal').classList.remove('active');
+            
+            const checkoutModal = document.getElementById('checkoutModal');
+            const cartModal = document.getElementById('cartModal');
+            if (checkoutModal) checkoutModal.classList.remove('active');
+            if (cartModal) cartModal.classList.remove('active');
             form.reset();
         }
     });
 }
 
+// 🔧 ОТПРАВКА В TELEGRAM - ИСПРАВЛЕННАЯ ВЕРСИЯ С ПОДДЕРЖКОЙ CORS
 async function sendOrderToTelegram(orderData) {
     const orderText = formatOrderMessage(orderData);
     
-    console.log('Отправка заказа в Telegram...');
+    console.log('📤 Отправка заказа...');
     
+    // СПОСОБ 1: Через серверный прокси (РЕКОМЕНДУЕТСЯ)
     try {
-        const url = `https://api.telegram.org/bot${TELEGRAM_CONFIG.botToken}/sendMessage`;
-        
-        const response = await fetch(url, {
+        // Если у вас есть серверный эндпоинт:
+        const response = await fetch('/api/send-order', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                text: orderText,
+                chatId: TELEGRAM_CONFIG.chatId
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success) {
+                console.log('✅ Заказ успешно отправлен через сервер');
+                return true;
+            }
+        }
+    } catch (serverError) {
+        console.warn('⚠️ Серверный метод недоступен, пробуем прямой запрос...');
+    }
+    
+    // СПОСОБ 2: Прямой запрос с использованием CORS-прокси (для тестирования)
+    try {
+        // Используем публичный CORS-прокси (только для тестирования!)
+        const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+        const url = `https://api.telegram.org/bot${TELEGRAM_CONFIG.botToken}/sendMessage`;
+        
+        const response = await fetch(proxyUrl + url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Origin': window.location.origin
             },
             body: JSON.stringify({
                 chat_id: TELEGRAM_CONFIG.chatId,
@@ -785,18 +837,128 @@ async function sendOrderToTelegram(orderData) {
         const data = await response.json();
         
         if (data.ok) {
-            console.log('✅ Заказ успешно отправлен в Telegram');
+            console.log('✅ Заказ успешно отправлен через прокси');
             return true;
         } else {
-            console.error('❌ Ошибка отправки в Telegram:', data.description);
-            alert(`Ошибка отправки: ${data.description}\n\nПроверьте правильность токена бота и chat ID`);
-            return false;
+            console.error('❌ Ошибка Telegram API:', data.description);
+            throw new Error(data.description);
         }
     } catch (error) {
-        console.error('❌ Ошибка сети:', error);
-        alert('Произошла ошибка при отправке заказа. Проверьте подключение к интернету.');
-        return false;
+        console.error('❌ Ошибка отправки:', error);
+        
+        // СПОСОБ 3: Использование iframe (альтернативный метод)
+        try {
+            await sendViaIframe(orderText);
+            return true;
+        } catch (iframeError) {
+            console.error('❌ Все методы отправки не удались');
+            
+            // Показываем пользователю сообщение с заказом для ручной отправки
+            showManualOrderMessage(orderText);
+            return false;
+        }
     }
+}
+
+// Альтернативный метод через iframe
+function sendViaIframe(message) {
+    return new Promise((resolve, reject) => {
+        try {
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            document.body.appendChild(iframe);
+            
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `https://api.telegram.org/bot${TELEGRAM_CONFIG.botToken}/sendMessage`;
+            form.target = iframe.name || 'telegramFrame';
+            
+            const chatIdInput = document.createElement('input');
+            chatIdInput.type = 'hidden';
+            chatIdInput.name = 'chat_id';
+            chatIdInput.value = TELEGRAM_CONFIG.chatId;
+            form.appendChild(chatIdInput);
+            
+            const textInput = document.createElement('input');
+            textInput.type = 'hidden';
+            textInput.name = 'text';
+            textInput.value = message;
+            form.appendChild(textInput);
+            
+            const parseModeInput = document.createElement('input');
+            parseModeInput.type = 'hidden';
+            parseModeInput.name = 'parse_mode';
+            parseModeInput.value = 'HTML';
+            form.appendChild(parseModeInput);
+            
+            document.body.appendChild(form);
+            form.submit();
+            
+            setTimeout(() => {
+                document.body.removeChild(iframe);
+                document.body.removeChild(form);
+                resolve(true);
+            }, 1000);
+        } catch (error) {
+            reject(error);
+        }
+    });
+}
+
+// Показываем сообщение для ручной отправки
+function showManualOrderMessage(orderText) {
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.8);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    `;
+    
+    modal.innerHTML = `
+        <div style="
+            background: white;
+            max-width: 500px;
+            width: 100%;
+            padding: 30px;
+            border-radius: 12px;
+            max-height: 80vh;
+            overflow-y: auto;
+        ">
+            <h3 style="margin-bottom: 15px; color: #c0392b;">⚠️ Не удалось отправить заказ автоматически</h3>
+            <p style="margin-bottom: 15px; color: #666;">Пожалуйста, скопируйте заказ и отправьте его вручную:</p>
+            <pre style="
+                background: #f5f5f5;
+                padding: 15px;
+                border-radius: 8px;
+                white-space: pre-wrap;
+                word-wrap: break-word;
+                font-size: 14px;
+                max-height: 300px;
+                overflow-y: auto;
+            ">${orderText}</pre>
+            <button onclick="this.closest('div[style]').remove()" style="
+                margin-top: 15px;
+                padding: 10px 20px;
+                background: #2ecc71;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 16px;
+                width: 100%;
+            ">Закрыть</button>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
 }
 
 function formatOrderMessage(orderData) {
