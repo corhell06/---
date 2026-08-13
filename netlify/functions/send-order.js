@@ -49,7 +49,7 @@ exports.handler = async function(event, context) {
             };
         }
 
-        // 4. Форматируем сообщение
+        // 4. Форматируем сообщение с МОСКОВСКИМ ВРЕМЕНЕМ
         const message = formatOrderMessage(orderData);
         console.log('📤 Отправка сообщения в Telegram...');
 
@@ -114,7 +114,7 @@ exports.handler = async function(event, context) {
     }
 };
 
-// Функция форматирования сообщения
+// ✅ ФУНКЦИЯ ФОРМАТИРОВАНИЯ С МОСКОВСКИМ ВРЕМЕНЕМ
 function formatOrderMessage(orderData) {
     let message = `🛒 <b>Новый заказ!</b>\n\n`;
     message += `👤 <b>Имя:</b> ${orderData.name || 'Не указано'}\n`;
@@ -139,7 +139,19 @@ function formatOrderMessage(orderData) {
     }
     
     message += `\n💰 <b>Итого:</b> ${orderData.totalAmount || 0}₽`;
-    message += `\n📅 <b>Дата:</b> ${new Date().toLocaleString('ru-RU')}`;
+    
+    // ✅ ИСПРАВЛЕНО: Московское время с timeZone
+    const moscowDate = new Date().toLocaleString('ru-RU', {
+        timeZone: 'Europe/Moscow',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
+    
+    message += `\n📅 <b>Дата:</b> ${moscowDate} (МСК)`;
     
     return message;
 }
